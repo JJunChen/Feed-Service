@@ -4,12 +4,12 @@ const redis = require('redis');
 
 const router = express.Router();
 
-const redisClient = redis.createClient();
+const redisClient = redis.createClient('6379', '172.18.0.2');
 redisClient.on('connect', () => {
   console.log('redis connected');
 });
 
-const client = new cassandra.Client({ contactPoints: ['127.0.0.1'] });
+const client = new cassandra.Client({ contactPoints: ['172.18.0.2/16'] });
 client.connect((err, result) => {
   console.log('cassandra connected');
 });
@@ -18,12 +18,12 @@ const getFeedByUserId = 'SELECT * FROM feedservice.feed WHERE user_id = ? ALLOW 
 
 router.get('/:user_id', (req, res) => {
   const userId = +req.params.user_id;
-
   redisClient.get(userId, (error, redisResult) => {
     if (redisResult) {
       res.status(200).send(JSON.parse(redisResult));
     } else {
-      client.execute(getFeedByUserId, [userId], { prepare: true })
+      client
+        .execute(getFeedByUserId, [userId], { prepare: true })
         .then((result) => {
           result = result.rows[0];
           const respond = { user_id: result.user_id };
