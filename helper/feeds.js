@@ -4,12 +4,12 @@ const redis = require('redis');
 
 const router = express.Router();
 
-const redisClient = redis.createClient('6379', '172.18.0.2');
+const redisClient = redis.createClient();
 redisClient.on('connect', () => {
   console.log('redis connected');
 });
 
-const client = new cassandra.Client({ contactPoints: ['172.18.0.2/16'] });
+const client = new cassandra.Client({ contactPoints: ['127.0.0.1'] });
 client.connect((err, result) => {
   console.log('cassandra connected');
 });
@@ -27,7 +27,7 @@ router.get('/:user_id', (req, res) => {
         .then((result) => {
           result = result.rows[0];
           const respond = { user_id: result.user_id };
-          const tweets = result.tweets;
+          const { tweets } = result;
           if (tweets.length > 5) {
             respond.tweets = tweets.slice(tweets.length - 5);
           } else {
